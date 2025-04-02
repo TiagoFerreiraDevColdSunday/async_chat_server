@@ -13,6 +13,19 @@ async fn async_client() -> std::io::Result<()> {
 
     let (tx, mut rx) = mpsc::channel::<String>(10);
 
+    let mut username = String::new();
+    let prefix = "Username ";
+
+    println!("Welcome to Tanjeranja! Please enter your username:");
+    io::stdin().read_line(&mut username).unwrap();
+    username = prefix.to_string() + username.trim();
+
+    writer
+        .lock()
+        .await
+        .write_all(format!("{}\n", username).as_bytes())
+        .await?;
+
     tokio::spawn(async move {
         let stdin = io::stdin();
         let mut input = String::new();
