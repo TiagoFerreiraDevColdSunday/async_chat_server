@@ -1,16 +1,14 @@
-use tokio::net::TcpListener;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::net::TcpListener;
 use tokio::sync::broadcast;
 
-pub async fn async_server() -> std::io::Result<()> {
+async fn async_server() -> std::io::Result<()> {
     let listener = TcpListener::bind("127.0.0.1:8080").await?;
     let (tx, _rx) = broadcast::channel(10);
-    
-    print!("Server is on.");
+
+    print!("Welcome to Tanjeranja.");
 
     loop {
-
-
         let (mut socket, addr) = listener.accept().await?;
         let tx = tx.clone();
         let mut rx = tx.subscribe();
@@ -26,11 +24,14 @@ pub async fn async_server() -> std::io::Result<()> {
                         match result {
                             Ok(0) => {
                                 // Client disconnected
+                                println!("User {} disconnected.", addr);
                                 let _ = tx.send(format!("User {} has left the chat.", addr));
                                 break;
                             }
                             Ok(_) => {
                                 // Broadcast the received message
+                                println!("Received from {}: {}", addr, line.trim());
+
                                 let _ = tx.send(format!("{}: {}", addr, line.trim()));
                                 line.clear();
                             }
@@ -49,5 +50,12 @@ pub async fn async_server() -> std::io::Result<()> {
                 }
             }
         });
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    if let Err(e) = async_server().await {
+        eprintln!("Server error: {}", e);
     }
 }
