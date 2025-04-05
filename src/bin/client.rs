@@ -43,8 +43,9 @@ async fn async_client() -> std::io::Result<()> {
     let mut server_reader = reader.lines();
     tokio::spawn(async move {
         while let Ok(Some(line)) = server_reader.next_line().await {
-            println!("Server: {}", line);
+            println!("{}", line);
         }
+        println!("Disconnected from the server.");
     });
 
     while let Some(msg) = rx.recv().await {

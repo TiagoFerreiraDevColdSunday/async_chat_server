@@ -41,7 +41,7 @@ async fn async_server() -> std::io::Result<()> {
             clients.lock().await.insert(username.clone(), msg_tx);
 
             // Notify everyone about the new user
-            tx.send(format!("{} has joined the chat!", username))
+            tx.send(format!("{} has joined the chat!\n", username))
                 .unwrap();
 
             // Start listening for messages from the client
@@ -52,14 +52,14 @@ async fn async_server() -> std::io::Result<()> {
                             Ok(0) => {
                                 // Client disconnected
                                 println!("User {} disconnected.", username);
-                                let _ = tx.send(format!("User {} has left the chat.", username));
+                                let _ = tx.send(format!("User {} has left the chat.\n", username));
                                 break;
                             }
                             Ok(_) => {
                                 // Broadcast the received message
                                 println!("Received from {}: {}", username, line.trim());
 
-                                let _ = tx.send(format!("{}: {}", username, line.trim()));
+                                let _ = tx.send(format!("{}: {}\n", username, line.trim())).unwrap();
                                 line.clear();
                             }
                             Err(e) => {
