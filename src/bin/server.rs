@@ -1,3 +1,6 @@
+extern crate async_chat_server;
+use async_chat_server::client_server_utils::get_machine_ip;
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -7,8 +10,16 @@ use tokio::sync::{Mutex, broadcast};
 type Clients = Arc<Mutex<HashMap<String, tokio::sync::mpsc::Sender<String>>>>;
 
 async fn async_server() -> std::io::Result<()> {
-    let listener = TcpListener::bind("127.0.0.1:8080").await?;
+    //Call get_machine_ip() to get the IP address of the machine
+    let ip_address = get_machine_ip().unwrap_or_else(|| "127.0.0.1".to_string());
+
+    // Bind the server to the IP address and port 8080
+    let listener = TcpListener::bind(format!("{}:8080", ip_address)).await?;
+
+    // Create a shared state for clients
     let clients: Clients = Arc::new(Mutex::new(HashMap::new()));
+
+    // Creates a broadcast channel for sending messages to all clients
     let (tx, _rx) = broadcast::channel(10);
 
     loop {

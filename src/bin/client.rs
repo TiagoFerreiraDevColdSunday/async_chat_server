@@ -1,3 +1,6 @@
+extern crate async_chat_server;
+use async_chat_server::client_server_utils::get_machine_ip;
+
 use std::io;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -6,7 +9,12 @@ use tokio::sync::Mutex;
 use tokio::sync::mpsc;
 
 async fn async_client() -> std::io::Result<()> {
-    let stream = TcpStream::connect("127.0.0.1:8080").await?;
+    // Get the machine's IP address
+    let ip_address = get_machine_ip().unwrap_or_else(|| "127.0.0.1".to_string());
+
+    // Connects to the server and waits for it to accept the connection
+    let stream = TcpStream::connect(format!("{}:8080", ip_address)).await?;
+
     let (reader, writer) = stream.into_split();
     let reader = BufReader::new(reader);
     let writer = Arc::new(Mutex::new(writer));
