@@ -1,6 +1,7 @@
 extern crate async_chat_server;
-use async_chat_server::client_server_utils::{decrypt_password_rsa, get_ipv4};
-
+use async_chat_server::client_server_utils::{
+    create_and_encrypt_password, decrypt_password_rsa, get_ipv4,
+};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -21,6 +22,8 @@ async fn async_server() -> std::io::Result<()> {
 
     // Creates a broadcast channel for sending messages to all clients
     let (tx, _rx) = broadcast::channel(10);
+
+    print!("Server started! Waiting for clients...\n");
 
     loop {
         let (mut socket, _addr) = listener.accept().await?;
@@ -129,7 +132,37 @@ async fn async_server() -> std::io::Result<()> {
 
 #[tokio::main]
 async fn main() {
-    if let Err(e) = async_server().await {
-        eprintln!("Server error: {}", e);
+    print!(
+        "Welcome to a Rust chat server!\n Please, select a decision:\n 1. Start server\n 2. Create/Update the password\n 0. Exit\n"
+    );
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input).unwrap();
+
+    while input.trim() != "0" {
+        match input.trim() {
+            "1" => {
+                println!("Starting server...");
+                if let Err(e) = async_server().await {
+                    eprintln!("Server error: {}", e);
+                }
+                break;
+            }
+            "2" => {
+                println!("New password: ");
+                let mut password = String::new();
+                std::io::stdin().read_line(&mut password).unwrap();
+
+                if let Err(e) = create_and_encrypt_password(password.trim()) {
+                    eprintln!("Error creating password: {}", e);
+                } else {
+                    println!("Password created/updated successfully.");
+                }
+            }
+            _ => {
+                println!("Invalid choice. Please try again.");
+            }
+        }
+        input.clear();
+        std::io::stdin().read_line(&mut input).unwrap();
     }
 }

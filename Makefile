@@ -12,3 +12,9 @@ install_cargo_unix:
 
 install_cargo_windows:
     powershell -Command "Invoke-WebRequest -Uri https://win.rustup.rs -OutFile rustup-init.exe; Start-Process -FilePath ./rustup-init.exe -Wait; Remove-Item ./rustup-init.exe"
+
+run_server:
+	cargo run --bin server
+
+run_client:
+	cargo run --bin client

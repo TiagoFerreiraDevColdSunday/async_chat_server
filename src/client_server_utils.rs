@@ -21,9 +21,6 @@ pub fn get_ipv4() -> Option<String> {
 pub fn decrypt_password_rsa(
     password: &str,
 ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
-
-
-    print!("PASSWORD AS IT IS: {}\n\n", password);
     // Get project root directory
     let project_root = std::env::current_dir().expect("Failed to get current directory");
 
@@ -52,13 +49,39 @@ pub fn decrypt_password_rsa(
     // Trim both passwords to remove any extra whitespace or newlines
     let decrypted_password_trimmed = decrypted_password.trim();
     let input_password_trimmed = password.trim();
-    
 
-    // Compare the decrypted password with the input password
-    print!("Decrypted password: {}\n\n", decrypted_password_trimmed);
-    println!("Input password: {}\n\n\n", input_password_trimmed);
-
-    // Check if the decrypted password matches the input password
-    print!("TRUE OR FALSE: {}\n", input_password_trimmed == decrypted_password_trimmed);
     Ok(input_password_trimmed == decrypted_password_trimmed)
+}
+
+pub fn create_and_encrypt_password(
+    password: &str,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    // Get project root directory
+    let project_root = std::env::current_dir().expect("Failed to get current directory");
+
+    // Store the joined paths in variables to extend their lifetimes
+    let private_key_path_buf = project_root.join("src/keys/private_key.pem");
+    let encrypted_password_path_buf = project_root.join("src/keys/password.enc");
+
+    let private_key_path = private_key_path_buf.to_str().unwrap();
+    let encrypted_password_path = encrypted_password_path_buf.to_str().unwrap();
+
+    // Generate a new RSA key pair
+    let rsa = Rsa::generate(2048)?;
+
+    // Save the private key to a file
+    fs::write(private_key_path, rsa.private_key_to_pem()?)?;
+
+    // Encrypt the password using the public key
+    let mut buffer = vec![0; rsa.size() as usize];
+    let encrypted_size = rsa.public_encrypt(
+        password.as_bytes(),
+        &mut buffer,
+        openssl::rsa::Padding::PKCS1,
+    )?;
+
+    // Save the encrypted password to a file
+    fs::write(encrypted_password_path, &buffer[..encrypted_size])?;
+
+    Ok(())
 }
