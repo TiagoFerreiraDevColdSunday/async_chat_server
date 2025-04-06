@@ -1,5 +1,5 @@
 extern crate async_chat_server;
-use async_chat_server::client_server_utils::get_machine_ip;
+use async_chat_server::client_server_utils::{decrypt_password_rsa, get_ipv4};
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -11,7 +11,7 @@ type Clients = Arc<Mutex<HashMap<String, tokio::sync::mpsc::Sender<String>>>>;
 
 async fn async_server() -> std::io::Result<()> {
     //Call get_machine_ip() to get the IP address of the machine
-    let ip_address = get_machine_ip().unwrap_or_else(|| "127.0.0.1".to_string());
+    let ip_address = get_ipv4().unwrap_or_else(|| "127.0.0.1".to_string());
 
     // Bind the server to the IP address and port 8080
     let listener = TcpListener::bind(format!("{}:8080", ip_address)).await?;
@@ -34,6 +34,8 @@ async fn async_server() -> std::io::Result<()> {
             let mut line = String::new();
             let mut username = String::new();
 
+            line.clear();
+
             // Wait for the client to send their nickname
             if reader.read_line(&mut line).await.unwrap() > 0 {
                 if line.starts_with("Username ") {
@@ -44,6 +46,40 @@ async fn async_server() -> std::io::Result<()> {
                         .await
                         .unwrap();
                     return;
+                }
+            }
+
+            line.clear();
+
+            writer
+                .write_all(b"Password for this server:\n")
+                .await
+                .unwrap();
+
+            // Wait for the client to send their password
+            if reader.read_line(&mut line).await.unwrap() > 0 {
+                match decrypt_password_rsa(line.trim()) {
+                    Ok(true) => {
+                        writer
+                            .write_all(b"Password accepted. Please enter your username:\n")
+                            .await
+                            .unwrap();
+                    }
+                    Ok(false) => {
+                        writer
+                            .write_all(b"Invalid password. Disconnecting...\n")
+                            .await
+                            .unwrap();
+                        return;
+                    }
+                    Err(e) => {
+                        eprintln!("Error decrypting password: {}", e);
+                        writer
+                            .write_all(b"An error occurred. Disconnecting...\n")
+                            .await
+                            .unwrap();
+                        return;
+                    }
                 }
             }
 
