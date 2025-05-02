@@ -12,7 +12,7 @@ type Clients = Arc<Mutex<HashMap<String, tokio::sync::mpsc::Sender<String>>>>;
 
 async fn async_server() -> std::io::Result<()> {
     //Call get_machine_ip() to get the IP address of the machine
-    let ip_address = get_ipv4().unwrap_or_else(|| "127.0.0.1".to_string());
+    let ip_address = "0.0.0.0";
 
     print!("Server is running on IP address: {}\n", ip_address);
 
