@@ -14,6 +14,8 @@ async fn async_server() -> std::io::Result<()> {
     //Call get_machine_ip() to get the IP address of the machine
     let ip_address = get_ipv4().unwrap_or_else(|| "127.0.0.1".to_string());
 
+    print!("Server is running on IP address: {}\n", ip_address);
+
     // Bind the server to the IP address and port 8080
     let listener = TcpListener::bind(format!("{}:8080", ip_address)).await?;
 
