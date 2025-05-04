@@ -1,7 +1,5 @@
 extern crate async_chat_server;
-use async_chat_server::client_server_utils::{
-    create_and_encrypt_password, decrypt_password_rsa, get_ipv4,
-};
+use async_chat_server::client_server_utils::{create_and_encrypt_password, decrypt_password_rsa};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -56,19 +54,12 @@ async fn async_server() -> std::io::Result<()> {
 
             line.clear();
 
-            writer
-                .write_all(b"Password for this server:\n")
-                .await
-                .unwrap();
 
             // Wait for the client to send their password
             if reader.read_line(&mut line).await.unwrap() > 0 {
                 match decrypt_password_rsa(line.trim()) {
                     Ok(true) => {
-                        writer
-                            .write_all(b"Password accepted. Please enter your username:\n")
-                            .await
-                            .unwrap();
+                        writer.write_all(b"Password accepted.\n").await.unwrap();
                     }
                     Ok(false) => {
                         writer
