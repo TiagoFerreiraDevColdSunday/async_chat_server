@@ -54,12 +54,15 @@ async fn async_server() -> std::io::Result<()> {
 
             line.clear();
 
+            print!("Received username: {}\n", username);
 
             // Wait for the client to send their password
             if reader.read_line(&mut line).await.unwrap() > 0 {
                 match decrypt_password_rsa(line.trim()) {
                     Ok(true) => {
                         writer.write_all(b"Password accepted.\n").await.unwrap();
+
+                        print!("Password accepted for user: {}\n", username);
                     }
                     Ok(false) => {
                         writer
@@ -90,7 +93,10 @@ async fn async_server() -> std::io::Result<()> {
             // Start listening for messages from the client
             loop {
                 tokio::select! {
-                    result = reader.read_line(&mut line) => {
+                    result = async {
+                        line.clear();
+                        reader.read_line(&mut line).await
+                    } => {
                         match result {
                             Ok(0) => {
                                 // Client disconnected

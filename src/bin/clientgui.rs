@@ -71,25 +71,26 @@ impl GUI {
             let password = self.password.clone();
             let username = self.username.clone();
     
-            // Wrap `self.state` in an Arc<Mutex<T>> to share it safely
-            let state: Arc<Mutex<AppState>> = Arc::new(Mutex::new(self.state.clone()));
-    
-            tokio::spawn({
-                let state = Arc::clone(&state);
-                async move {
-                    if let Err(e) = async_client(ip, username, password).await {
-                        eprintln!("Error: {}", e);
-                        let mut state = state.lock().await;
-                        *state = AppState::Login; // Update the state safely
-                    } else {
-                        println!("Connection successful!");
-                        let mut state = state.lock().await;
-                        *state = AppState::Chatroom; // Update the state safely
-                    }
+            let mut tx_state = self.state.clone(); // Declare tx_state as mutable
+            let tx = self.tx.clone();
+            let state = &mut self.state;
+            let reader = &mut self.reader;
+            let writer = &mut self.writer;
+            let rx = &mut self.rx;
+
+            
+            tokio::spawn(async move {
+                if let Err(e) = async_client(ip, username, password).await {
+                    eprintln!("Error: {}", e);
+                    tx_state = AppState::Login; // Update state to Login on failure
+                } else {
+                    println!("Connection successful!");
+                    tx_state = AppState::Chatroom; // Update state to Chatroom on success
                 }
             });
         }
     }
+
 
     fn ui_chatroom(&mut self, ui: &mut egui::Ui) {
         ui.label("Chatroom");
