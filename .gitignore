@@ -2,3 +2,7 @@
 private_key.pem
 public_key.pem
 password.txt
+client/node_modules
+client/dist/
+node_modules/
+Cargo.lock/

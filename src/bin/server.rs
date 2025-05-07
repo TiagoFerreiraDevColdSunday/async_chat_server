@@ -1,7 +1,5 @@
 extern crate async_chat_server;
-use async_chat_server::client_server_utils::{
-    create_and_encrypt_password, decrypt_password_rsa, get_ipv4,
-};
+use async_chat_server::server_utils::{create_and_encrypt_password, decrypt_password_rsa};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -12,7 +10,7 @@ type Clients = Arc<Mutex<HashMap<String, tokio::sync::mpsc::Sender<String>>>>;
 
 async fn async_server() -> std::io::Result<()> {
     //Call get_machine_ip() to get the IP address of the machine
-    let ip_address = get_ipv4().unwrap_or_else(|| "127.0.0.1".to_string());
+    let ip_address = "0.0.0.0";
 
     print!("Server is running on IP address: {}\n", ip_address);
 
@@ -56,19 +54,15 @@ async fn async_server() -> std::io::Result<()> {
 
             line.clear();
 
-            writer
-                .write_all(b"Password for this server:\n")
-                .await
-                .unwrap();
+            print!("Received username: {}\n", username);
 
             // Wait for the client to send their password
             if reader.read_line(&mut line).await.unwrap() > 0 {
                 match decrypt_password_rsa(line.trim()) {
                     Ok(true) => {
-                        writer
-                            .write_all(b"Password accepted. Please enter your username:\n")
-                            .await
-                            .unwrap();
+                        writer.write_all(b"Password accepted.\n").await.unwrap();
+
+                        print!("Password accepted for user: {}\n", username);
                     }
                     Ok(false) => {
                         writer
@@ -99,7 +93,10 @@ async fn async_server() -> std::io::Result<()> {
             // Start listening for messages from the client
             loop {
                 tokio::select! {
-                    result = reader.read_line(&mut line) => {
+                    result = async {
+                        line.clear();
+                        reader.read_line(&mut line).await
+                    } => {
                         match result {
                             Ok(0) => {
                                 // Client disconnected
