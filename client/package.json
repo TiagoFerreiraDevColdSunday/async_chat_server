@@ -4,13 +4,21 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "client",
+    "win": {
+      "target": "nsis"
+    }
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "electron": "^36.1.0",
+    "electron-packager": "^17.1.2",
     "net": "^1.0.2"
   }
 }

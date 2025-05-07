@@ -15,8 +15,6 @@ form.addEventListener('submit', async (e) => {
 
             status.textContent = `Server ${data}`;
 
-            console.log('Assigned onMessage:', connection.onMessage); // connection.onMessage is undefined
-
             if (data.trim().includes('accepted')) {
                 status.textContent = 'Connected to server';
                 window.connection = connection;
