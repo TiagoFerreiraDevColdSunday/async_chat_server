@@ -5,3 +5,4 @@ password.txt
 client/node_modules
 client/dist/
 node_modules/
+Cargo.lock/
