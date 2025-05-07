@@ -1,5 +1,5 @@
 extern crate async_chat_server;
-use async_chat_server::client_server_utils::{create_and_encrypt_password, decrypt_password_rsa};
+use async_chat_server::server_utils::{create_and_encrypt_password, decrypt_password_rsa};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
